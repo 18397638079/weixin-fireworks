@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <title>精致爱心烟花</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { 
+      background: #000; 
+      overflow: hidden; 
+      cursor: none;
+    }
+    canvas { 
+      display: block; 
+      width: 100vw; 
+      height: 100vh; 
+    }
+    .love-text {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Dancing Script', cursive;
+      font-size: 56px;
+      color: #ffc0cb;
+      text-shadow: 0 0 15px rgba(255, 192, 203, 0.9);
+      opacity: 0.95;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="love-text">余生有你便足矣</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = window.innerHeight;
+    let particles = [];
+
+    // 页面加载后启动
+    window.onload = () => {
+      setTimeout(() => {
+        setInterval(spawnFirework, 400); // 每400ms炸一次
+        animate();
+      }, 1000);
+    };
+
+    // 随机位置发射烟花（颜值核心优化）
+    function spawnFirework() {
+      const x = 100 + Math.random() * (w - 200); // 避开边缘
+      const y = 100 + Math.random() * (h - 200);
+      const count = 80; // 每组粒子数（精致不拥挤）
+      const colors = [
+        `rgba(255, 105, 180, 1)`, // 粉红
+        `rgba(255, 20, 147, 1)`, // 深粉
+        `rgba(255, 160, 122, 1)`, // 浅橙
+        `rgba(255, 215, 0, 1)`    // 金色
+      ];
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 5; // 速度适中
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = 2 + Math.random() * 2.5; // 小巧精致
+
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: size,
+          alpha: 1,
+          color: color,
+          decay: 0.02 + Math.random() * 0.015, // 快速消失
+          trail: [] // 爱心拖尾（增加灵动性）
+        });
+      }
+    }
+
+    // 更新粒子：绝对不滞留
+    function updateParticle(p) {
+      // 记录轨迹（拖尾效果）
+      p.trail.unshift({x: p.x, y: p.y, alpha: p.alpha * 0.5});
+      if (p.trail.length > 5) p.trail.pop();
+
+      // 移动炸开
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.04; // 轻微下坠
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+
+      // 快速消失（关键：2秒内必消失）
+      p.alpha -= p.decay;
+    }
+
+    // 绘制精致爱心（颜值核心）
+    function drawHeart(p) {
+      // 先画拖尾（更灵动）
+      p.trail.forEach((t, i) => {
+        const ratio = 1 - i / p.trail.length;
+        ctx.save();
+        ctx.translate(t.x, t.y);
+        ctx.rotate(Math.random() * Math.PI * 2);
+        ctx.scale((p.size * ratio) / 12, (p.size * ratio) / 12);
+        drawHeartShape(ctx, t.alpha * 0.6, p.color);
+        ctx.restore();
+      });
+
+      // 画主体爱心
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(Math.random() * Math.PI * 2);
+      ctx.scale(p.size / 12, p.size / 12);
+      drawHeartShape(ctx, p.alpha, p.color);
+      ctx.restore();
+    }
+
+    // 精致爱心路径（数学优化，更像真实爱心）
+    function drawHeartShape(ctx, alpha, color) {
+      ctx.beginPath();
+      ctx.moveTo(0, 3);
+      ctx.bezierCurveTo(5, -3, 15, -8, 0, -15);
+      ctx.bezierCurveTo(-15, -8, -5, -3, 0, 3);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+      // 爱心边缘描白（更精致）
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    // 动画主循环：彻底清屏
+    function animate() {
+      requestAnimationFrame(animate);
+      // 全黑覆盖（不留任何残留）
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+
+      // 倒序遍历，删除消失粒子
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        updateParticle(p);
+        drawHeart(p);
+
+        // 完全消失就移除
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
