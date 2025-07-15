@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>烟花祝福</title>
   <style>
+    /* 保持原有样式不变 */
     * {
       margin: 0;
       padding: 0;
@@ -19,6 +20,32 @@
       position: relative;
     }
     
+    /* 添加：首次点击引导层（提示用户点击） */
+    #clickGuide {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+    #clickGuide span {
+      margin-top: 20px;
+      animation: bounce 1.5s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* 其他样式保持不变... */
     .message-container {
       position: absolute;
       top: 0;
@@ -79,7 +106,6 @@
       z-index: 10;
     }
     
-    /* 烟花动画相关样式 */
     .firework {
       position: absolute;
       border-radius: 50%;
@@ -90,7 +116,13 @@
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 <body>
-  <!-- 音频元素 - 替换为久石让《天空之城》 -->
+  <!-- 新增：首次点击引导层（提示用户点击屏幕） -->
+  <div id="clickGuide">
+    <i class="fa fa-hand-pointer-o fa-3x"></i>
+    <span>点击屏幕有惊喜</span>
+  </div>
+
+  <!-- 音频元素 -->
   <audio id="bgMusic" loop>
     <source src="https://music.163.com/song/media/outer/url?id=5235383.mp3" type="audio/mpeg">
   </audio>
@@ -111,6 +143,7 @@
     const musicControl = document.getElementById('musicControl');
     const musicIcon = document.getElementById('musicIcon');
     const message = document.getElementById('message');
+    const clickGuide = document.getElementById('clickGuide'); // 新增引导层元素
     
     // 状态变量
     let isMusicPlaying = false;
@@ -119,49 +152,65 @@
     let fireworks = [];
     let particles = [];
     const gravity = 0.15;
+    let hasUserClicked = false; // 标记用户是否已点击
     
-    // 初始化
+    // 初始化：等待用户首次点击
     function init() {
-      // 音乐控制
-      musicControl.addEventListener('click', toggleMusic);
+      // 监听整个屏幕的首次点击（关键！）
+      document.addEventListener('click', firstClickHandler, { once: true });
       
-      // 显示消息
+      // 音乐控制按钮逻辑不变
+      musicControl.addEventListener('click', toggleMusic);
+    }
+    
+    // 处理用户首次点击（同时触发音乐+烟花）
+    function firstClickHandler() {
+      hasUserClicked = true;
+      
+      // 隐藏引导层
+      clickGuide.style.opacity = '0';
       setTimeout(() => {
-        message.classList.add('show');
+        clickGuide.style.display = 'none';
       }, 500);
       
-      // 尝试自动播放音乐
+      // 1. 播放音乐（此时有用户交互，浏览器允许播放）
       bgMusic.play().then(() => {
         isMusicPlaying = true;
         musicIcon.className = 'fa fa-pause';
       }).catch(error => {
-        console.log('自动播放失败，等待用户交互后重试:', error);
+        console.log('音乐播放失败:', error);
         musicIcon.className = 'fa fa-play';
       });
       
-      // 启动烟花
+      // 2. 显示文字
+      setTimeout(() => {
+        message.classList.add('show');
+      }, 500);
+      
+      // 3. 启动烟花
       setTimeout(() => {
         isFireworksActive = true;
         startFireworks();
       }, 1000);
     }
     
-    // 音乐控制
+    // 音乐控制逻辑不变
     function toggleMusic() {
+      if (!hasUserClicked) return; // 未点击时不响应
+      
       if (isMusicPlaying) {
         bgMusic.pause();
         musicIcon.className = 'fa fa-play';
       } else {
         bgMusic.play().catch(error => {
           console.log('音乐播放失败:', error);
-          alert('由于浏览器限制，需要您手动点击播放音乐');
         });
         musicIcon.className = 'fa fa-pause';
       }
       isMusicPlaying = !isMusicPlaying;
     }
     
-    // 初始化Canvas
+    // 以下烟花相关逻辑保持不变...
     function initCanvas() {
       canvas = document.createElement('canvas');
       ctx = canvas.getContext('2d');
@@ -169,18 +218,15 @@
       canvas.height = window.innerHeight;
       document.body.appendChild(canvas);
       
-      // 监听窗口大小变化
       window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       });
     }
     
-    // 启动烟花
     function startFireworks() {
       initCanvas();
       
-      // 初始烟花
       for (let i = 0; i < 5; i++) {
         setTimeout(() => {
           createFirework(
@@ -192,9 +238,8 @@
         }, i * 800);
       }
       
-      // 持续生成烟花
       setInterval(() => {
-        if (Math.random() < 0.6) { // 60%概率生成新烟花
+        if (Math.random() < 0.6) {
           createFirework(
             Math.random() * canvas.width, 
             canvas.height, 
@@ -207,63 +252,50 @@
       animate();
     }
     
-    // 创建单个烟花
     function createFirework(x, y, targetX, targetY) {
-      const hue = Math.random() * 360;
-      
       fireworks.push({
         x, y, targetX, targetY,
         speed: 6 + Math.random() * 3,
-        hue,
+        hue: Math.random() * 360,
         trail: [],
         trailLength: 15,
         alpha: 1,
         size: 2 + Math.random() * 1,
-        type: Math.random() > 0.7 ? 'burst' : 'normal' // 30%概率生成特殊烟花
+        type: Math.random() > 0.7 ? 'burst' : 'normal'
       });
     }
     
-    // 动画循环
     function animate() {
       if (!isFireworksActive) return;
       
       requestAnimationFrame(animate);
       
-      // 半透明背景，保留拖影
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = 'lighter';
       
-      // 更新并绘制烟花
       for (let i = fireworks.length - 1; i >= 0; i--) {
         const firework = fireworks[i];
         
-        // 记录轨迹
         firework.trail.push({ x: firework.x, y: firework.y });
         if (firework.trail.length > firework.trailLength) {
           firework.trail.shift();
         }
         
-        // 计算距离，判断是否爆炸
         const dx = firework.targetX - firework.x;
         const dy = firework.targetY - firework.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist < 5) {
-          // 爆炸生成粒子
           explode(firework.x, firework.y, firework.hue, firework.type);
           fireworks.splice(i, 1);
         } else {
-          // 没到目标，继续移动
           const angle = Math.atan2(dy, dx);
           firework.x += Math.cos(angle) * firework.speed;
           firework.y += Math.sin(angle) * firework.speed;
-          
-          // 绘制轨迹
           drawTrail(firework);
           
-          // 绘制烟花
           ctx.beginPath();
           ctx.arc(firework.x, firework.y, firework.size, 0, Math.PI * 2);
           ctx.fillStyle = `hsla(${firework.hue}, 100%, 70%, ${firework.alpha})`;
@@ -271,11 +303,9 @@
         }
       }
       
-      // 更新并绘制粒子
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         
-        // 更新位置和物理属性
         p.x += p.vx;
         p.y += p.vy;
         p.vy += gravity;
@@ -288,13 +318,11 @@
           continue;
         }
         
-        // 绘制粒子
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
         ctx.fillStyle = `hsla(${p.hue}, ${p.saturation}%, ${p.brightness}%, ${p.life})`;
         ctx.fill();
         
-        // 绘制尾迹
         if (p.trail) {
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
@@ -306,11 +334,9 @@
       }
     }
     
-    // 爆炸生成粒子
     function explode(x, y, hue, type = 'normal') {
       let particleCount, speedRange, sizeRange;
       
-      // 根据烟花类型调整粒子参数
       if (type === 'burst') {
         particleCount = 300 + Math.floor(Math.random() * 100);
         speedRange = [2, 7];
@@ -321,18 +347,15 @@
         sizeRange = [1, 2.5];
       }
       
-      // 生成粒子
       for (let i = 0; i < particleCount; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = speedRange[0] + Math.random() * (speedRange[1] - speedRange[0]);
         const size = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
         
-        // 粒子颜色变化
-        let particleHue = hue + (Math.random() * 60 - 30); // 主色调附近变化
+        let particleHue = hue + (Math.random() * 60 - 30);
         let saturation = 80 + Math.random() * 20;
         let brightness = 60 + Math.random() * 30;
         
-        // 20%概率生成白色粒子增加亮点
         if (Math.random() < 0.2) {
           particleHue = 0;
           saturation = 0;
@@ -348,18 +371,16 @@
           saturation,
           brightness,
           life: 1,
-          trail: Math.random() > 0.5 // 50%概率有尾迹
+          trail: Math.random() > 0.5
         });
       }
       
-      // 添加爆炸闪光效果
       ctx.beginPath();
       ctx.arc(x, y, 15 + Math.random() * 10, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.fill();
     }
     
-    // 绘制烟花轨迹
     function drawTrail(firework) {
       for (let j = 0; j < firework.trail.length; j++) {
         const point = firework.trail[j];
@@ -373,7 +394,7 @@
       }
     }
     
-    // 页面加载完成后初始化
+    // 页面加载后初始化
     window.addEventListener('load', init);
   </script>
 </body>
