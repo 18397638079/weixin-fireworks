@@ -2,226 +2,244 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>烟花特效</title>
-  <style>
-    /* 页面基础样式 */
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden; 
-      background: #000; 
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+  <title>烟花祝福</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            love: {
+              primary: '#ff4d6d',
+              secondary: '#ff758f',
+              accent: '#ff8fa3',
+            },
+            ocean: {
+              dark: '#0f172a',
+              deep: '#1e3a8a',
+              wave: '#3b82f6',
+            }
+          },
+          fontFamily: {
+            romantic: ['Dancing Script', 'cursive'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
     }
-    /* 显示文字样式 */
-    #showText {
-      position: absolute;
-      color: #ff4d6d;
-      font-size: 36px;
-      top: 30%;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0;
-      animation: fadeIn 2s forwards;
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow-glow {
+        text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff4d6d, 0 0 40px #ff4d6d;
+      }
+      .text-shadow-ocean {
+        text-shadow: 0 0 5px #fff, 0 0 10px #3b82f6, 0 0 15px #1e3a8a;
+      }
+      .animate-float {
+        animation: float 3s ease-in-out infinite;
+      }
+      .animate-pulse-slow {
+        animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .firework-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .music-player {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+      }
+      .music-player:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .wechat-guide {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 300;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+      .start-button {
+        @apply bg-love-primary hover:bg-love-secondary text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-love-primary focus:ring-opacity-50 shadow-lg;
+      }
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(-50%) scale(0.8); }
-      to { opacity: 1; transform: translateX(-50%) scale(1); }
-    }
-    /* 音乐控制器样式 */
-    #musicControl {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      backdrop-filter: blur(5px);
-      transition: all 0.3s;
-    }
-    #musicControl:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    #musicIcon {
-      color: white;
-      font-size: 18px;
-    }
-    /* 加载提示样式 */
-    #loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-family: Arial, sans-serif;
-      z-index: 200;
-    }
-    #loading p {
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top: 4px solid white;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    /* 音乐加载失败提示 */
-    #musicError {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      backdrop-filter: blur(5px);
-      z-index: 100;
-      display: none;
-      max-width: 200px;
-      text-align: center;
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
   </style>
-</head>
-<body>
-  <!-- 加载提示 -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>正在准备惊喜...</p>
-  </div>
   
-  <!-- 音乐元素 - 使用网易云音乐《稻香》 -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-ocean-dark m-0 p-0 overflow-hidden">
+  <!-- 音频元素 -->
   <audio id="bgMusic" loop>
     <source src="https://music.163.com/song/media/outer/url?id=136759.mp3" type="audio/mpeg">
   </audio>
   
-  <!-- 音乐控制器 -->
-  <div id="musicControl">
-    <i id="musicIcon" class="fa fa-volume-up"></i>
+  <!-- 音乐播放器 -->
+  <div id="musicPlayer" class="music-player fixed bottom-6 right-6 rounded-full p-2 flex items-center gap-3 z-50">
+    <div id="musicControl" class="w-10 h-10 rounded-full bg-love-primary/80 flex items-center justify-center cursor-pointer transition-all hover:scale-110">
+      <i id="musicIcon" class="fa fa-play text-white"></i>
+    </div>
+    <div class="hidden md:block text-white text-sm font-light">
+      <div id="songTitle" class="truncate max-w-[120px]">稻香 - 周杰伦</div>
+      <div id="songProgress" class="h-1 w-24 bg-white/20 rounded-full mt-1 overflow-hidden">
+        <div id="progressBar" class="h-full bg-love-primary w-0 transition-all"></div>
+      </div>
+    </div>
   </div>
   
-  <!-- 音乐加载失败提示 -->
-  <div id="musicError">
-    音乐加载失败，请点击按钮播放
+  <!-- 微信引导层 -->
+  <div id="wechatGuide" class="wechat-guide">
+    <div class="text-center p-6 max-w-md mx-auto">
+      <div class="mb-6 text-2xl font-bold">在微信中打开体验更佳</div>
+      <p class="mb-8 text-lg">点击右上角三个点，选择"在聊天中发送给朋友"或"在浏览器中打开"</p>
+      <img src="https://picsum.photos/seed/wechat/300/200" alt="微信分享指引" class="rounded-lg mx-auto mb-8">
+      <button id="closeWechatGuide" class="start-button">我知道了</button>
+    </div>
+  </div>
+  
+  <!-- 启动界面 -->
+  <div id="startScreen" class="fixed inset-0 z-200 flex flex-col items-center justify-center bg-ocean-dark">
+    <div class="text-center p-6 max-w-md mx-auto">
+      <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-romantic text-white mb-8 animate-float">
+        点击开始惊喜
+      </h1>
+      <p class="text-white/80 mb-10 text-lg">为你准备了一段浪漫的烟花和音乐</p>
+      <button id="startButton" class="start-button text-xl">
+        <i class="fa fa-heart mr-2"></i>开始体验
+      </button>
+    </div>
   </div>
   
   <!-- 要显示的文字 -->
-  <div id="showText">余生有你便足矣</div>
+  <div id="showText" class="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none z-30 transition-opacity duration-2000">
+    <div class="text-[clamp(2.5rem,8vw,5rem)] font-romantic font-bold text-love-primary text-shadow-glow animate-float">
+      余生有你便足矣
+    </div>
+  </div>
   
-  <!-- 烟花特效核心JS（依赖Canvas） -->
+  <!-- 烟花特效核心JS -->
   <script>
     // DOM元素
     const showText = document.getElementById('showText');
     const bgMusic = document.getElementById('bgMusic');
     const musicControl = document.getElementById('musicControl');
     const musicIcon = document.getElementById('musicIcon');
-    const loading = document.getElementById('loading');
-    const musicError = document.getElementById('musicError');
+    const songProgress = document.getElementById('songProgress');
+    const progressBar = document.getElementById('progressBar');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    const wechatGuide = document.getElementById('wechatGuide');
+    const closeWechatGuide = document.getElementById('closeWechatGuide');
+    
+    // 状态变量
     let isMusicPlaying = false;
-    let isMusicLoaded = false;
+    let isFireworksActive = false;
+    let canvas, ctx;
+    let fireworks = [];
+    let particles = [];
+    const gravity = 0.15;
+    
+    // 检测是否在微信浏览器中
+    function isWechat() {
+      const ua = navigator.userAgent.toLowerCase();
+      return ua.indexOf('micromessenger') !== -1;
+    }
+    
+    // 初始化
+    function init() {
+      // 如果在微信中打开，显示引导
+      if (isWechat()) {
+        setTimeout(() => {
+          wechatGuide.style.display = 'flex';
+        }, 1000);
+      }
+      
+      // 音乐控制
+      musicControl.addEventListener('click', toggleMusic);
+      
+      // 关闭微信引导
+      closeWechatGuide.addEventListener('click', () => {
+        wechatGuide.style.display = 'none';
+      });
+      
+      // 开始体验
+      startButton.addEventListener('click', startExperience);
+      
+      // 更新音乐进度
+      bgMusic.addEventListener('timeupdate', updateProgress);
+    }
     
     // 音乐控制
-    musicControl.addEventListener('click', toggleMusic);
-    
     function toggleMusic() {
       if (isMusicPlaying) {
         bgMusic.pause();
-        musicIcon.className = 'fa fa-volume-off';
+        musicIcon.className = 'fa fa-play';
       } else {
-        if (!isMusicLoaded) {
-          // 如果音乐还没加载，先加载
-          loadMusic();
-        } else {
-          // 已经加载，直接播放
-          bgMusic.play().catch(handlePlayError);
-        }
+        bgMusic.play().catch(error => {
+          console.log('音乐播放失败:', error);
+          alert('由于浏览器限制，需要您手动点击播放音乐');
+        });
+        musicIcon.className = 'fa fa-pause';
       }
       isMusicPlaying = !isMusicPlaying;
     }
     
-    // 加载音乐
-    function loadMusic() {
-      bgMusic.load();
-      bgMusic.play().catch(handlePlayError);
-      
-      // 监听音乐加载状态
-      bgMusic.addEventListener('loadeddata', () => {
-        isMusicLoaded = true;
-        console.log('音乐加载成功');
-      });
-      
-      // 监听音乐错误
-      bgMusic.addEventListener('error', handleMusicError);
+    // 更新音乐进度
+    function updateProgress() {
+      const percent = (bgMusic.currentTime / bgMusic.duration) * 100;
+      progressBar.style.width = `${percent}%`;
     }
     
-    // 处理播放错误
-    function handlePlayError(error) {
-      console.log('音乐播放失败:', error);
-      musicIcon.className = 'fa fa-volume-up';
-      isMusicPlaying = false;
-      showMusicError();
-    }
-    
-    // 处理音乐加载错误
-    function handleMusicError() {
-      console.log('音乐加载错误:', bgMusic.error);
-      isMusicLoaded = false;
-      showMusicError();
-    }
-    
-    // 显示音乐错误提示
-    function showMusicError() {
-      musicError.style.display = 'block';
-      // 5秒后自动隐藏
-      setTimeout(() => {
-        musicError.style.display = 'none';
-      }, 5000);
-    }
-    
-    // 自动启动体验
+    // 开始体验
     function startExperience() {
-      // 隐藏加载提示
-      loading.style.opacity = '0';
+      // 隐藏开始界面
+      startScreen.style.opacity = '0';
       setTimeout(() => {
-        loading.style.display = 'none';
-      }, 1000);
+        startScreen.style.display = 'none';
+      }, 500);
       
       // 显示目标文字
-      showText.style.display = 'block';
+      showText.style.opacity = '1';
       
-      // 尝试加载并播放音乐
-      setTimeout(loadMusic, 1000);
+      // 播放音乐
+      bgMusic.play().then(() => {
+        isMusicPlaying = true;
+        musicIcon.className = 'fa fa-pause';
+      }).catch(error => {
+        console.log('自动播放失败，等待用户交互后重试:', error);
+        // 保留手动播放的可能性
+        musicIcon.className = 'fa fa-play';
+      });
       
-      // 延迟启动烟花（让文字先显示）
-      setTimeout(() => startFireworks(), 3000);
+      // 启动烟花
+      setTimeout(() => {
+        isFireworksActive = true;
+        startFireworks();
+      }, 500);
     }
     
-    // 烟花特效逻辑（基于Canvas）
-    let canvas, ctx;
-    let fireworks = [];
-    let particles = [];
-    const gravity = 0.2;
-
     // 初始化Canvas
     function initCanvas() {
       canvas = document.createElement('canvas');
@@ -234,120 +252,206 @@
         canvas.height = window.innerHeight;
       });
     }
-
-    // 启动烟花（生成初始烟花）
+    
+    // 启动烟花
     function startFireworks() {
       initCanvas();
-      // 循环生成烟花，模拟连续发射
+      
+      // 初始烟花
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          createFirework(
+            Math.random() * canvas.width, 
+            canvas.height, 
+            Math.random() * canvas.width, 
+            Math.random() * canvas.height * 0.5
+          );
+        }, i * 800);
+      }
+      
+      // 持续生成烟花
       setInterval(() => {
-        createFirework(
-          Math.random() * canvas.width, 
-          canvas.height, 
-          Math.random() * canvas.width, 
-          Math.random() * canvas.height * 0.5
-        );
-      }, 1000); 
+        if (Math.random() < 0.6) { // 60%概率生成新烟花
+          createFirework(
+            Math.random() * canvas.width, 
+            canvas.height, 
+            Math.random() * canvas.width, 
+            Math.random() * canvas.height * 0.5
+          );
+        }
+      }, 2000);
+      
       animate();
     }
-
-    // 创建单个烟花（从底部飞到上方爆炸）
+    
+    // 创建单个烟花
     function createFirework(x, y, targetX, targetY) {
+      const hue = Math.random() * 360;
+      
       fireworks.push({
         x, y, targetX, targetY,
-        speed: 5 + Math.random() * 3, 
-        hue: Math.random() * 360, 
+        speed: 6 + Math.random() * 3,
+        hue,
         trail: [],
-        trailLength: 10,
-        alpha: 1
+        trailLength: 15,
+        alpha: 1,
+        size: 2 + Math.random() * 1,
+        type: Math.random() > 0.7 ? 'burst' : 'normal' // 30%概率生成特殊烟花
       });
     }
-
-    // 动画循环（更新+绘制烟花/粒子）
+    
+    // 动画循环
     function animate() {
+      if (!isFireworksActive) return;
+      
       requestAnimationFrame(animate);
+      
       // 半透明背景，保留拖影
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // 更新烟花
+      ctx.globalCompositeOperation = 'lighter';
+      
+      // 更新并绘制烟花
       for (let i = fireworks.length - 1; i >= 0; i--) {
         const firework = fireworks[i];
+        
         // 记录轨迹
         firework.trail.push({ x: firework.x, y: firework.y });
         if (firework.trail.length > firework.trailLength) {
           firework.trail.shift();
         }
-
+        
         // 计算距离，判断是否爆炸
         const dx = firework.targetX - firework.x;
         const dy = firework.targetY - firework.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-
-        if (dist < 5) { 
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 5) {
           // 爆炸生成粒子
-          explode(firework.x, firework.y, firework.hue);
+          explode(firework.x, firework.y, firework.hue, firework.type);
           fireworks.splice(i, 1);
         } else {
           // 没到目标，继续移动
           const angle = Math.atan2(dy, dx);
           firework.x += Math.cos(angle) * firework.speed;
           firework.y += Math.sin(angle) * firework.speed;
+          
           // 绘制轨迹
           drawTrail(firework);
+          
+          // 绘制烟花
+          ctx.beginPath();
+          ctx.arc(firework.x, firework.y, firework.size, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${firework.hue}, 100%, 70%, ${firework.alpha})`;
+          ctx.fill();
         }
       }
-
-      // 更新粒子
+      
+      // 更新并绘制粒子
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
+        
+        // 更新位置和物理属性
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += gravity; 
-        p.life -= 0.01;  
-
+        p.vy += gravity;
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.life -= 0.01;
+        
         if (p.life <= 0) {
           particles.splice(i, 1);
           continue;
         }
+        
         // 绘制粒子
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-        ctx.fillStyle = `hsla(${p.hue}, 100%, 50%, ${p.life})`;
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, ${p.saturation}%, ${p.brightness}%, ${p.life})`;
         ctx.fill();
+        
+        // 绘制尾迹
+        if (p.trail) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 3, p.y - p.vy * 3);
+          ctx.strokeStyle = `hsla(${p.hue}, ${p.saturation}%, ${p.brightness}%, ${p.life * 0.7})`;
+          ctx.lineWidth = p.size * p.life;
+          ctx.stroke();
+        }
       }
     }
-
+    
     // 爆炸生成粒子
-    function explode(x, y, hue) {
-      for (let i = 0; i < 200; i++) { 
-        const angle = Math.random() * Math.PI*2;
-        const speed = 3 + Math.random() * 5;
+    function explode(x, y, hue, type = 'normal') {
+      let particleCount, speedRange, sizeRange;
+      
+      // 根据烟花类型调整粒子参数
+      if (type === 'burst') {
+        particleCount = 300 + Math.floor(Math.random() * 100);
+        speedRange = [2, 7];
+        sizeRange = [1.5, 3];
+      } else {
+        particleCount = 150 + Math.floor(Math.random() * 100);
+        speedRange = [3, 6];
+        sizeRange = [1, 2.5];
+      }
+      
+      // 生成粒子
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = speedRange[0] + Math.random() * (speedRange[1] - speedRange[0]);
+        const size = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
+        
+        // 粒子颜色变化
+        let particleHue = hue + (Math.random() * 60 - 30); // 主色调附近变化
+        let saturation = 80 + Math.random() * 20;
+        let brightness = 60 + Math.random() * 30;
+        
+        // 20%概率生成白色粒子增加亮点
+        if (Math.random() < 0.2) {
+          particleHue = 0;
+          saturation = 0;
+          brightness = 90 + Math.random() * 10;
+        }
+        
         particles.push({
           x, y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: 1 + Math.random() * 3, 
-          hue,
-          life: 1
+          size,
+          hue: particleHue,
+          saturation,
+          brightness,
+          life: 1,
+          trail: Math.random() > 0.5 // 50%概率有尾迹
         });
       }
+      
+      // 添加爆炸闪光效果
+      ctx.beginPath();
+      ctx.arc(x, y, 15 + Math.random() * 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fill();
     }
-
+    
     // 绘制烟花轨迹
     function drawTrail(firework) {
       for (let j = 0; j < firework.trail.length; j++) {
         const point = firework.trail[j];
-        const size = 3 * (1 - j / firework.trailLength);
+        const size = firework.size * (1 - j / firework.trailLength);
         const alpha = firework.alpha * (1 - j / firework.trailLength);
+        
         ctx.beginPath();
-        ctx.arc(point.x, point.y, size, 0, Math.PI*2);
-        ctx.fillStyle = `hsla(${firework.hue}, 100%, 50%, ${alpha})`;
+        ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${firework.hue}, 100%, 70%, ${alpha})`;
         ctx.fill();
       }
     }
     
-    // 页面加载完成后自动启动
-    window.addEventListener('load', startExperience);
+    // 页面加载完成后初始化
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
